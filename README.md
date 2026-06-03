@@ -139,6 +139,10 @@ Sensitive information such as API keys are protected using `.env` variables and 
 
 ---
 
+▶️ EJECUTE
+
+python -m streamlit run analizador_logs.py
+
 ## 👨‍💻 Author
 
 Santiago Cañón Cuervo
