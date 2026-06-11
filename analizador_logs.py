@@ -102,229 +102,231 @@ if st.button("🚀 Analizar Logs"):
     # ======================================
 
     if uploaded_files:
-                    
-                    for file in uploaded_files:
 
-                        try:
+        for file in uploaded_files:
 
-                            nombre = file.name.lower()
+            try:
 
-                            # Validar extensiones
-                            if not any(nombre.endswith(ext) for ext in ALLOWED_EXTENSIONS):
+                nombre = file.name.lower()
 
-                                st.warning(
-                                    f"⚠️ {file.name} ignorado: tipo de archivo no permitido."
-                                )
+                # Validar extensiones
+                if not any(
+                    nombre.endswith(ext)
+                    for ext in ALLOWED_EXTENSIONS
+                ):
 
-                                continue
+                    st.warning(
+                        f"⚠️ {file.name} ignorado: tipo de archivo no permitido."
+                    )
 
-                            # Validar archivo vacío
-                            if file.size == 0:
-                                MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+                    continue
 
-                                if file.size > MAX_FILE_SIZE:
-                                    st.warning(
-                                        f"⚠️ {file.name} excede el tamaño máximo permitido (10 MB)."
-                                    )
-                                    continue
-                                st.warning(
-                                    f"⚠️ {file.name} está vacío."
-                                )
+                # Validar archivo vacío
+                if file.size == 0:
 
-                                continue
+                    st.warning(
+                        f"⚠️ {file.name} está vacío."
+                    )
 
-                            # TXT y LOG
-                            if nombre.endswith(".txt") or nombre.endswith(".log"):
+                    continue
 
-                                contenido = file.read().decode(
-                                    "utf-8",
-                                    errors="ignore"
-                                )
+                # Tamaño máximo 10 MB
+                MAX_FILE_SIZE = 10 * 1024 * 1024
 
-                            # DOCX
-                            elif nombre.endswith(".docx"):
+                if file.size > MAX_FILE_SIZE:
 
-                                from docx import Document
-                                import tempfile
+                    st.warning(
+                        f"⚠️ {file.name} excede el tamaño máximo permitido (10 MB)."
+                    )
 
-                                with tempfile.NamedTemporaryFile(
-                                    delete=False,
-                                    suffix=".docx"
-                                ) as tmp:
+                    continue
 
-                                    tmp.write(file.getvalue())
+                # TXT y LOG
+                if nombre.endswith(".txt") or nombre.endswith(".log"):
 
-                                    ruta_temp = tmp.name
+                    contenido = file.read().decode(
+                        "utf-8",
+                        errors="ignore"
+                    )
 
-                                doc = Document(ruta_temp)
+                # DOCX
+                elif nombre.endswith(".docx"):
 
-                                contenido = "\n".join(
-                                    p.text for p in doc.paragraphs
-                                )
+                    from docx import Document
+                    import tempfile
 
-                            else:
+                    with tempfile.NamedTemporaryFile(
+                        delete=False,
+                        suffix=".docx"
+                    ) as tmp:
 
-                                continue
+                        tmp.write(file.getvalue())
+                        ruta_temp = tmp.name
 
-                            # Validar contenido vacío
-                            if not contenido.strip():
+                    doc = Document(ruta_temp)
 
-                                st.warning(
-                                    f"⚠️ {file.name} no contiene texto."
-                                )
+                    contenido = "\n".join(
+                        p.text
+                        for p in doc.paragraphs
+                    )
 
-                                continue
+                else:
 
-                            datos_analisis += f"""
+                    continue
 
-                =================================================
-                ARCHIVO: {file.name}
-                =================================================
+                # Validar contenido vacío
+                if not contenido.strip():
 
-                {contenido}
+                    st.warning(
+                        f"⚠️ {file.name} no contiene texto."
+                    )
 
-                """
+                    continue
 
-                        except UnicodeDecodeError:
+                datos_analisis += f"""
 
-                            st.warning(
-                                f"⚠️ No fue posible decodificar {file.name}."
-                            )
+=================================================
+ARCHIVO: {file.name}
+=================================================
 
-                        except Exception as e:
+{contenido}
 
-                            st.warning(
-                                f"⚠️ Error procesando {file.name}: {e}"
-                            )
+"""
 
-                    # ======================================
-                    # AGREGAR ERROR DE TERMINAL
-                    # ======================================
+            except UnicodeDecodeError:
 
-                    if error_text.strip():
+                st.warning(
+                    f"⚠️ No fue posible decodificar {file.name}."
+                )
 
-                        datos_analisis += f"""
+            except Exception as e:
 
-                =================================================
-                ERROR TERMINAL
-                =================================================
+                st.warning(
+                    f"⚠️ Error procesando {file.name}: {e}"
+                )
 
-                {error_text}
+    # ======================================
+    # AGREGAR ERROR MANUAL
+    # ======================================
 
-                """
+    if error_text.strip():
 
-                    # ======================================
-                    # VALIDAR TERMINAL
-                    # ======================================
+        datos_analisis += f"""
 
-                    if not datos_analisis.strip():
 
-                        st.warning(
-                            "⚠️ Debes subir un archivo o escribir un error."
-                        )
+{error_text}
 
-                    else:
+"""
 
-                        try:
+    # ======================================
+    # VALIDAR ENTRADA
+    # ======================================
 
-                            prompt = f"""
-                Actúa como un Staff Software Engineer especializado en:
+    if not datos_analisis.strip():
 
-                - DevOps
-                - SRE
-                - Backend
-                - Cloud Computing
-                - Linux
-                - Windows Server
-                - Bases de datos
-                - Observabilidad
-                - Troubleshooting
-                - QA SENIOR
+        st.warning(
+            "⚠️ Debes subir un archivo o escribir un error."
+        )
 
-                Analiza la información entregada.
+    else:
 
-                OBJETIVOS:
+        try:
 
-                1. Detectar errores críticos.
+            prompt = f"""
+Actúa como un Staff Software Engineer especializado en:
 
-                2. Detectar advertencias importantes.
+- DevOps
+- SRE
+- Backend
+- Cloud Computing
+- Linux
+- Windows Server
+- Bases de datos
+- Observabilidad
+- Troubleshooting
+- QA SENIOR
 
-                3. Identificar la causa raíz.
+Analiza la información entregada.
 
-                4. Clasificar severidad:
+OBJETIVOS:
 
-                - Crítica
-                - Alta
-                - Media
-                - Baja
+1. Detectar errores críticos.
+2. Detectar advertencias importantes.
+3. Identificar la causa raíz.
 
-                5. Crear una tabla:
+4. Clasificar severidad:
 
-                | Línea | Severidad | Error | Causa probable |
+- Crítica
+- Alta
+- Media
+- Baja
 
-                6. Explicar técnicamente cada error.
+5. Crear una tabla:
 
-                7. Proponer soluciones concretas.
+| Línea | Severidad | Error | Causa probable |
 
-                8. Si aplica, incluir:
+6. Explicar técnicamente cada error.
+7. Proponer soluciones concretas.
 
-                - comandos Linux
-                - comandos Windows
-                - PowerShell
-                - SQL
-                - cambios de código
+8. Si aplica, incluir:
 
-                9. Generar un resumen ejecutivo.
+- comandos Linux
+- comandos Windows
+- PowerShell
+- SQL
+- cambios de código
 
-                INFORMACIÓN A ANALIZAR:
+9. Generar un resumen ejecutivo.
 
-                {datos_analisis}
-                """
+INFORMACIÓN A ANALIZAR:
 
-                            st.subheader("📋 Diagnóstico Técnico")
+{datos_analisis}
+"""
 
-                            output_container = st.empty()
+            st.subheader("📋 Diagnóstico Técnico")
 
-                            respuesta_completa = ""
+            output_container = st.empty()
 
-                            stream = client.models.generate_content_stream(
-                                model="gemini-2.5-flash-lite",
-                                contents=prompt
-                            )
+            respuesta_completa = ""
 
-                            for chunk in stream:
+            stream = client.models.generate_content_stream(
+                model="gemini-2.5-flash-lite",
+                contents=prompt
+            )
 
-                                if hasattr(chunk, "text") and chunk.text:
+            for chunk in stream:
 
-                                    respuesta_completa += chunk.text
+                if hasattr(chunk, "text") and chunk.text:
 
-                                    output_container.markdown(
-                                        respuesta_completa + "▌"
-                                    )
+                    respuesta_completa += chunk.text
 
-                            output_container.markdown(
-                                respuesta_completa
-                            )
+                    output_container.markdown(
+                        respuesta_completa + "▌"
+                    )
 
-                            st.success(
-                                "✅ Análisis completado."
-                            )
+            output_container.markdown(
+                respuesta_completa
+            )
 
-                        except Exception as e:
+            st.success(
+                "✅ Análisis completado."
+            )
 
-                            st.error(
-                                f"❌ Error al conectar con Gemini:\n\n{e}"
-                            )
+        except Exception as e:
 
-                            st.info("""
-                Posibles causas:
+            st.error(
+                f"❌ Error al conectar con Gemini:\n\n{e}"
+            )
 
-                - API KEY inválida
-                - Sin conexión a internet
-                - Cuota agotada
-                - Modelo incorrecto
-                - Error temporal del servicio
-                """)
+            st.info("""
+Posibles causas:
+
+- API KEY inválida
+- Sin conexión a internet
+- Cuota agotada
+- Modelo incorrecto
+- Error temporal del servicio
+""")
 
 
 #CREDITOS
@@ -332,5 +334,5 @@ if st.button("🚀 Analizar Logs"):
 
 st.divider()
 st.caption(
-                    "Developed by Santiago Cañón Cuervo"
+                    "Developed by Santiago Cañón Cuervo | AI-powered troubleshooting tool"
                 )
